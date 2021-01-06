@@ -13,14 +13,16 @@ def main():
     ratings_data = "data/ratings.csv"
     pandas_data_books = read_file_csv(books_data)
     pandas_data_ratings = read_file_csv(ratings_data)
-    print(pandas_data_ratings.head(4))
+
+    ratings_data = pd.merge(pandas_data_books[['book_id','title']], pandas_data_ratings, on='book_id')
 
     # Calculate nb of voters for each book - v
-    nb_voters_book = pandas_data_ratings['book_id'].value_counts()
-    # print(nb_voters_book[28])
+    nb_voters_book = ratings_data['book_id'].value_counts()
+    # print(nb_voters_book.head(6))
+
     
     # Calculate the rating mean for each book - R
-    rating_mean_book = pandas_data_ratings.groupby(['book_id'])[['rating']].mean()
+    rating_mean_book = ratings_data.groupby(['book_id'])[['rating']].mean()
     # print(rating_mean_book)
 
     # Fix the number of minimum readers to get into the list - m 
@@ -28,18 +30,11 @@ def main():
     # print(m)
 
     # Rating mean (all of the books) - C.
-    rating_all_mean = pandas_data_ratings['rating'].mean()
+    rating_all_mean = ratings_data['rating'].mean()
     # print(rating_all_mean)
 
     # Calculate the weighted average rating = [(v/(v+m))*R] + [(m/(v+m))*C]
     # For each book, get this rating.
-
-    # weighted_rating = {}
-    # for i in nb_voters_book:
-    #     if rating_mean_book[i] > m :
-    #         weighted_rating[i] = weighted_average_rating(nb_voters_book[i], rating_mean_book[i], rating_all_mean, m)
-
-   
     # print(weighted_rating)
 
 
