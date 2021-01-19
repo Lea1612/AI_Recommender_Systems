@@ -352,7 +352,7 @@ precision_k(10)
 
 
 # Evaluation ARHR.
-def ARHA(k):
+def ARHR(k):
     # Importing global variables that has been assigned before to use them here.
     global items_df
     global data_matrix
@@ -377,10 +377,10 @@ def ARHA(k):
                 calculations_list.append(1 / position)
 
         result = sum(calculations_list) / user_value_counts_df.shape[0]
-        print(f'ARHA with {sim} similarly is {result}.')
+        print(f'ARHR with {sim} similarly is {result}.')
 
 
-ARHA(10)
+ARHR(10)
 
 
 
