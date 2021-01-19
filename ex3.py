@@ -18,14 +18,14 @@ def read_file_csv(file_name):
 
 
 # Our data.
-books_df = read_file_csv('./data/books.csv')
-books_tags_df = read_file_csv('./data/books_tags.csv')
+books_df = read_file_csv('./books.csv')
+books_tags_df = read_file_csv('./books_tags.csv')
 
-users_df = read_file_csv('./data/users.csv')
-ratings_df = read_file_csv('./data/ratings.csv')
-tags_df = read_file_csv('./data/tags.csv')
+users_df = read_file_csv('./users.csv')
+ratings_df = read_file_csv('./ratings.csv')
+tags_df = read_file_csv('./tags.csv')
 
-test_df = read_file_csv('./data/test.csv')
+test_df = read_file_csv('./test.csv')
 
 
 # Book with ratings and users dataframe.
