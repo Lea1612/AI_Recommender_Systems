@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import math
 import heapq
 
@@ -16,15 +13,14 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import pairwise_distances, cosine_similarity
 
 
-# # Data & Tables preparation
+### Data & Tables preparation ###
 
-# In[2]:
-
-
+# Function to read the csv files.
 def read_file_csv(file_name):
     return pd.read_csv(file_name, encoding="ISO-8859-1")
 
 
+# Our data
 books_df = read_file_csv('./data/books.csv')
 books_tags_df = read_file_csv('./data/books_tags.csv')
 
@@ -35,9 +31,9 @@ tags_df = read_file_csv('./data/tags.csv')
 test_df = read_file_csv('./data/test.csv')
 
 
-# In[3]:
 
 
+# Book with ratings and users dataframe
 global b_r_u_df
 b_r_u_df = pd.merge(books_df[['book_id', 'title']], ratings_df, on='book_id', how='inner')
 b_r_u_df = pd.merge(b_r_u_df, users_df, on='user_id', how='inner')
@@ -46,19 +42,17 @@ global items_df
 items_df = b_r_u_df[['book_id', 'title']].drop_duplicates(subset='book_id')
 
 
-# # Non-Personalized
+### Non-Personalized ###
 
-# In[4]:
-
-
+# Score for each book. Explained in the report.
 def weighted_average_rating(counts_df, m, rating_mean_df, rating_all_mean):
     return (counts_df / (counts_df + m)) * rating_mean_df + (m / (counts_df + m)) * rating_all_mean
 
-
+# To get the top k recommendations. The k books with the best score.
 def get_top_k_recommendations(df, counts_df, k, columns, m):
     return df[counts_df >= m].nlargest(k, columns)
 
-
+# We'll need this function for the recommendations according to the age.
 def get_age_range(age):
     if age % 10 == 0:
         age -= 1
@@ -68,7 +62,7 @@ def get_age_range(age):
 
     return lower_bound, upper_bound
 
-
+# To merge tables. Book_id with the number of voters for each book.
 def merge_tables(df):
     # Dataframe that contains distribution of votes by book ID.
     nb_voters_data = df['book_id'].value_counts()
@@ -80,23 +74,22 @@ def merge_tables(df):
     
     return nb_voters_df, nb_voters_data, rating_mean_df, rating_mean_data
 
-
+# m represents the minimum voters we need to count the rating and the score. 
+# We'll also need the total mean to caluculate the score (WR).
 def get_voters_and_means(nb_voters_data, rating_mean_df):
     m = nb_voters_data.quantile(0.90)
     rating_all_mean = rating_mean_df['rating_mean'].mean()
     return m, rating_all_mean
 
-
+# Get the top k recommendations: the k books with the best weighted average rating.
 def calculate_WAR_and_top_k(df, m, rating_all_mean, k, columns):
     df['weighted_average_rating'] = weighted_average_rating(df['counts'], m, df['rating_mean'], rating_all_mean)
     return get_top_k_recommendations(df, df['counts'], k, columns, m)
 
 
-# ## get_simply_recommendation
+### get_simply_recommendation ###
 
-# In[5]:
-
-
+# Calculate the WAR and get the k books with the best results.
 def get_simply_recommendation(k):
     global b_r_u_df
     
@@ -113,11 +106,9 @@ recommendation_df = get_simply_recommendation(10)
 print(recommendation_df[['book_id','title','weighted_average_rating']].head(10))
 
 
-# ## get_simply_place_recommendation
+### get_simply_place_recommendation ###
 
-# In[6]:
-
-
+# Same but according to the living place of the user.
 def get_simply_place_recommendation(place, k):
     global b_r_u_df
     
@@ -136,11 +127,9 @@ place_recommendation_df = get_simply_place_recommendation('Ohio', 10)
 print(place_recommendation_df[['book_id','title','weighted_average_rating']].head(10))
 
 
-# ## get_simply_age_recommendation
+### get_simply_age_recommendation ###
 
-# In[7]:
-
-
+# Same but according to the age of the user.
 def get_simply_age_recommendation(age, k):
     global b_r_u_df
     
@@ -160,22 +149,20 @@ age_recommendation_df = get_simply_age_recommendation(28, 10)
 print(age_recommendation_df[['book_id','title','weighted_average_rating']].head(10))
 
 
-# # Collaborative Filtering
+### Collaborative Filtering ###
 
-# In[8]:
-
-
+# To get the top k.
 def keep_top_k(array, k):
     smallest = heapq.nlargest(k, array)[-1]
     array[array < smallest] = 0
     return array
 
-
+# Similirity matrix according to the chosen similarity.
 def build_CF_prediction_matrix(sim):
     global ratings_diff
     return 1-pairwise_distances(ratings_diff, metric=sim)
 
-
+# Help function to get what we need for the recommendation. 
 def get_CF_final_output(pred, data_matrix, user_id, items_new_to_original, items, k):
     user_id = user_id - 1
     predicted_ratings_row = pred[user_id]
@@ -191,9 +178,7 @@ def get_CF_final_output(pred, data_matrix, user_id, items_new_to_original, items
     return pd.merge(books_original_indexes_df, items, on='book_id', how='inner')
 
 
-# In[9]:
-
-
+# Get the collaborative filtering recommendation according to the user.
 def get_CF_recommendation(user_id, k):
     # Import global variables.
     global ratings_df
@@ -246,18 +231,13 @@ def get_CF_recommendation(user_id, k):
     return get_CF_final_output(pred, data_matrix, user_id, items_new_to_original, items_df, k)
 
 
-# In[10]:
-
-
 recommendations_by_user = get_CF_recommendation(user_id=1, k=10)
 print(recommendations_by_user.head(10))
 
 
-# # Contact Based Filtering
+### Contact Based Filtering ###
 
-# In[11]:
-
-
+# Preparing the data, merge the dataframes we need.
 bookreads_tags_df = pd.merge(books_tags_df, tags_df, on='tag_id', how='inner')
 
 groupped_data = bookreads_tags_df.groupby('goodreads_book_id', as_index=False)['tag_name'].transform(lambda x: ' '.join(x))
@@ -269,27 +249,24 @@ contact_based_filtering_df['tag_name'] = contact_based_filtering_df['tag_name'].
 
 contact_based_filtering_df.head()
 
-
-# In[12]:
-
-
+# Clean the data to get lower case letter and get rid of '-'.
 def clean_data(x):
     x = str.lower(str(x))
     return x.replace('-', '')
 
 
+# Get all of our features together with a space in between. The choice of the features is explained in the report.
 def create_soup(x):
     return x['original_title'] + ' ' + x['language_code'] + ' ' + x['authors'] + ' ' + x['tag_name']
 
 
+# Similarity matrix. We use cosine similarity
 def build_contact_sim_metrix():
     global count_matrix
     return cosine_similarity(count_matrix, count_matrix)
 
 
-# In[13]:
-
-
+# We return the top k recommendation according to the content (the features of each book).
 def get_contact_recommendation(book_name, k):
     global contact_based_filtering_df
 
@@ -317,27 +294,20 @@ def get_contact_recommendation(book_name, k):
     return contact_based_filtering_df['title'].iloc[book_indices]
 
 
-# In[14]:
-
-
 contact_based_filtering_result = get_contact_recommendation('Twilight (Twilight, #1)', k=10)
 print(contact_based_filtering_result)
 
 
-# # Section 4 - Questions
+### Section 4 - Evaluations ###
 
-# In[15]:
-
-
+# Filter the data. We want only the books with ratings >= 4 and the users that that ranked books at least 10 times.
 high_rate_test_df = test_df[test_df['rating'] >= 4]
 user_value_counts = high_rate_test_df['user_id'].value_counts()
 user_value_counts_df = pd.DataFrame(data={'user_id': user_value_counts.index.tolist(), 'appearances': user_value_counts.values.tolist()})
 user_value_counts_df = user_value_counts_df[user_value_counts_df['appearances'] >= 10]
 
 
-# In[16]:
-
-
+# Evaluation P@k for each similarity.
 def precision_k(k):
     global items_df
     global data_matrix
@@ -370,10 +340,8 @@ def precision_k(k):
 precision_k(10)
 
 
-# In[17]:
-
-
-def ARHA(k):
+# Evaluation ARHR
+def ARHR(k):
     global items_df
     global data_matrix
     global ratings_diff
@@ -397,15 +365,12 @@ def ARHA(k):
                 calculations_list.append(1 / position)
 
         result = sum(calculations_list) / user_value_counts_df.shape[0]
-        print(f'ARHA with {sim} similarly is {result}.')
+        print(f'ARHR with {sim} similarly is {result}.')
 
 
-ARHA(10)
+ARHR(10)
 
-
-# In[18]:
-
-
+# Helper function to build the function RMSE. This time we wont filter the data.
 def get_recommendations_RMSE(pred, data_matrix, user_id):
     user_id = user_id - 1
     predicted_ratings_row = pred[user_id]
@@ -419,6 +384,7 @@ def get_recommendations_RMSE(pred, data_matrix, user_id):
 
     return {idx: rating for idx, rating in zip(book_ids, books_rating)}
 
+# Evaluation RMSE.
 def RMSE():
     global ratings_diff
     global mean_user_rating
