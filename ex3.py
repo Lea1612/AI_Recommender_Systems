@@ -326,7 +326,6 @@ def precision_k(k):
     global items_new_to_original
 
     pk_list = []
-
     for sim in ['cosine', 'euclidean', 'jaccard']:
         calculations_list = []
 
@@ -346,7 +345,7 @@ def precision_k(k):
             calculations_list.append(counter / k)
 
         pk_list.append(sum(calculations_list) / user_value_counts_df.shape[0])
-    
+
     return pk_list
 
 print(precision_k(10))
@@ -362,7 +361,6 @@ def ARHR(k):
     global items_new_to_original
 
     arhr_list = []
-
     for sim in ['cosine', 'euclidean', 'jaccard']:
         calculations_list = []
 
@@ -410,7 +408,6 @@ def RMSE():
     global mean_user_rating
 
     rmse_list = []
-
     for sim in ['cosine', 'euclidean', 'jaccard']:
         sum_error = 0
         count_lines = 0
@@ -423,6 +420,10 @@ def RMSE():
             for row in test_user_data.itertuples(index=False):
                 _, test_book_id, rating = tuple(row)
                 prediction = user_recommendations[test_book_id] if test_book_id in user_recommendations else 0
+
+                if prediction == 0:
+                    continue
+
                 sum_error += (prediction - rating)**2
                 count_lines += 1
 
