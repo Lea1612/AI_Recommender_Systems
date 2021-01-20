@@ -325,6 +325,8 @@ def precision_k(k):
     global mean_user_rating
     global items_new_to_original
 
+    pk_list = []
+
     for sim in ['cosine', 'euclidean', 'jaccard']:
         calculations_list = []
 
@@ -343,12 +345,11 @@ def precision_k(k):
 
             calculations_list.append(counter / k)
 
-        result = sum(calculations_list) / user_value_counts_df.shape[0]
-        print(f'Precision with {sim} similarly is {result}.')
+        pk_list.append(sum(calculations_list) / user_value_counts_df.shape[0])
+    
+    return pk_list
 
-
-precision_k(10)
-
+print(precision_k(10))
 
 
 # Evaluation ARHR.
@@ -359,6 +360,8 @@ def ARHR(k):
     global ratings_diff
     global mean_user_rating
     global items_new_to_original
+
+    arhr_list = []
 
     for sim in ['cosine', 'euclidean', 'jaccard']:
         calculations_list = []
@@ -376,11 +379,12 @@ def ARHR(k):
             for position in user_rec_merged_df.index + 1:
                 calculations_list.append(1 / position)
 
-        result = sum(calculations_list) / user_value_counts_df.shape[0]
-        print(f'ARHR with {sim} similarly is {result}.')
+        arhr_list.append(sum(calculations_list) / user_value_counts_df.shape[0])
+        
+    return arhr_list
 
 
-ARHR(10)
+print(ARHR(10))
 
 
 
@@ -405,6 +409,8 @@ def RMSE():
     global ratings_diff
     global mean_user_rating
 
+    rmse_list = []
+
     for sim in ['cosine', 'euclidean', 'jaccard']:
         sum_error = 0
         count_lines = 0
@@ -420,8 +426,9 @@ def RMSE():
                 sum_error += (prediction - rating)**2
                 count_lines += 1
 
-        result = math.sqrt(sum_error/count_lines)
-        print(f'RMSE with {sim} similarly is {result}.')
+        rmse_list.append(math.sqrt(sum_error/count_lines))
+
+    return rmse_list
 
 
-RMSE()
+print(RMSE())
